@@ -23,7 +23,15 @@ def lambda_handler(event, context):
         product_list = []
 
         for i in response['Items']:
-            product_list.append(i)
+            if isinstance(event["queryStringParameters"], dict) and "id" in event["queryStringParameters"]:
+                id = event["queryStringParameters"]['id']
+                if id == i['id']:
+                    return {
+                        "statusCode": HTTPStatus.OK,
+                        "body": json.dumps(i, cls=DecimalEncoder)
+                    }
+            else:
+                product_list.append(i)
 
         return {
             "statusCode": HTTPStatus.OK,
@@ -42,6 +50,7 @@ def execute_query(event, table):
     if isinstance(event["queryStringParameters"], dict) and "sku" in event["queryStringParameters"]:
         sku = event["queryStringParameters"]['sku']
         response = table.query(KeyConditionExpression=Key('sku').eq(sku))
+
     else:
         response = table.scan()
     return response
